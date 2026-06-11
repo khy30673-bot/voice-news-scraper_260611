@@ -1,0 +1,791 @@
+/* ============================================================
+   듣는 뉴스 — 디자인 토큰
+   읽히는 색감: 차분한 백색 베이스 + 진한 잉크 + 강조 파랑
+   ============================================================ */
+:root {
+  /* 배경 계열 — 깔끔한 백색·연한 블루그레이 */
+  --bg-page:      #f4f6fa;
+  --bg-surface:   #ffffff;
+  --bg-soft:      #e6ecf5;
+  --bg-elevated:  #fafbfd;
+
+  /* 글씨 계열 — 진한 잉크 */
+  --ink-1: #14182a;
+  --ink-2: #3d4458;
+  --ink-3: #6f7689;
+  --ink-on-accent: #ffffff;
+
+  /* 강조색 — 또렷한 파랑 (CTA와 포커스에만) */
+  --accent:       #2b6cd9;
+  --accent-soft:  #dde7f8;
+  --accent-ink:   #163d80;
+  --accent-deep:  #1d4ea0;
+
+  /* 계층 색 — 강조 파랑과 구분되게 셋 모두 다른 계열로
+     1계층 = 자주(헤드라인의 첫 만남)
+     2계층 = 청록(요약, 안정적)
+     3계층 = 초록(전문, 완료 의미) */
+  --l1-bg: #ece1f4;  --l1-ink: #5e2c7e;
+  --l2-bg: #d8edec;  --l2-ink: #1f5c5b;
+  --l3-bg: #ddefd9;  --l3-ink: #2a6232;
+
+  /* 상태 */
+  --border: #d2d9e5;
+  --border-strong: #a8b3c6;
+  --focus: #1d4ea0;
+
+  /* ============================================================
+     강한 대비 박스 — 저시력 사용자를 위한 정보 영역 (WCAG AAA 기준)
+     배경 #0d0e14 + 흰 글씨 #ffffff = 대비비 약 18:1 (AAA의 7:1 기준 한참 초과)
+     ============================================================ */
+  --contrast-bg:        #0d0e14;       /* 거의 검정 */
+  --contrast-bg-soft:   #1a1d29;       /* 약간 밝은 단계 — 호버·보조 영역용 */
+  --contrast-text:      #ffffff;       /* 순백색 글씨 */
+  --contrast-text-dim:  #c8ccd6;       /* 보조 글씨 — 그래도 대비 7:1 이상 유지 */
+  --contrast-border:    #2a2e3d;       /* 박스 테두리 */
+  --contrast-accent:    #5d8fff;       /* 강조 파랑 (어두운 배경 위에서 읽히는 톤) */
+
+  /* 크기·간격 */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: -apple-system, "Segoe UI", "Malgun Gothic",
+               "Apple SD Gothic Neo", sans-serif;
+  background: var(--bg-page);
+  color: var(--ink-1);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+button { font: inherit; cursor: pointer; border: none; background: none; }
+ul { list-style: none; }
+input { font: inherit; }
+
+/* ============================================================
+   모바일 프레임 — 데스크톱에서만 보임
+   ============================================================ */
+.phone-frame {
+  width: 100%;
+  max-width: 390px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--bg-page);
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 700px) {
+  body {
+    background: linear-gradient(180deg, #2a2722 0%, #1a1815 100%);
+    padding: 2rem 1rem 4rem;
+    display: flex;
+    justify-content: center;
+  }
+  .phone-frame {
+    border-radius: 36px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.4),
+                0 0 0 12px #1a1815,
+                0 0 0 13px #3a352d;
+    overflow: hidden;
+    min-height: 780px;
+    height: 780px;
+    margin: 0;
+  }
+}
+
+.phone-notch {
+  display: none;
+}
+@media (min-width: 700px) {
+  .phone-notch {
+    display: block;
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 100px; height: 22px;
+    background: #1a1815;
+    border-radius: 0 0 14px 14px;
+    z-index: 100;
+  }
+}
+
+/* ============================================================
+   화면 (각 .screen은 풀스크린, 한 번에 하나만 보임)
+   ============================================================ */
+.app-root {
+  position: relative;
+  min-height: 100vh;
+}
+@media (min-width: 700px) {
+  .app-root { min-height: 780px; height: 780px; }
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-page);
+  animation: screen-in 0.25s ease-out;
+}
+.screen[hidden] { display: none !important; }
+@media (min-width: 700px) {
+  .screen { min-height: 780px; height: 780px; }
+}
+
+@keyframes screen-in {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen { animation: none; }
+}
+
+/* ============================================================
+   공통 — 헤더, 탭바, 보디
+   ============================================================ */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  background: var(--bg-page);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.screen-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  flex: 1;
+  text-align: center;
+  color: var(--ink-1);
+}
+.icon-btn {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--ink-1);
+  flex-shrink: 0;
+}
+.icon-btn:hover { background: var(--bg-soft); }
+.icon-btn:active { background: var(--border); }
+.icon-btn-spacer { width: 44px; flex-shrink: 0; }
+
+.screen-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.1rem 1.5rem;
+}
+
+.tab-bar {
+  display: flex;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  padding: 0.4rem 0.5rem 0.6rem;
+  flex-shrink: 0;
+}
+.tab {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.15rem;
+  padding: 0.5rem 0.4rem;
+  border-radius: 10px;
+  color: var(--ink-3);
+  min-height: 56px;
+}
+.tab .tab-icon { font-size: 1.25rem; line-height: 1; }
+.tab .tab-label { font-size: 0.72rem; font-weight: 600; }
+.tab.active { color: var(--accent-ink); background: var(--accent-soft); }
+.tab:hover:not(.active) { background: var(--bg-soft); }
+
+.section-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+  margin-top: 1.5rem;
+}
+.section-label:first-child { margin-top: 0; }
+
+/* ============================================================
+   화면 1 — 진입
+   ============================================================ */
+.screen.entry {
+  background: linear-gradient(165deg, #2b6cd9 0%, #1a3f80 100%);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+.screen.entry:focus-visible { outline: 4px solid #fff; outline-offset: -8px; }
+
+.entry-content { max-width: 320px; }
+.entry-mark {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 1.2rem;
+  color: #fff;
+  opacity: 0.95;
+}
+.entry-mark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.entry-title {
+  font-size: 2.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.4rem;
+}
+.entry-tagline {
+  font-size: 1rem;
+  opacity: 0.85;
+  margin-bottom: 2.2rem;
+}
+/* ============================================================
+   진입 화면의 박스들 — 거의 검정 + 흰 글씨로 강한 대비 (WCAG AAA)
+   파란 그라데이션 배경 위에서 박스가 시각적 무게중심으로 떠오른다.
+   ============================================================ */
+.entry-cta {
+  background: var(--contrast-bg);
+  border: 2px solid var(--contrast-border);
+  border-radius: var(--radius-md);
+  padding: 1.4rem 1.1rem;
+  margin-bottom: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--contrast-text);
+}
+.entry-cta[hidden] { display: none !important; }
+.cta-icon {
+  font-size: 0.85rem;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--contrast-bg);
+  display: flex; align-items: center; justify-content: center;
+  animation: cta-pulse 1.8s ease-in-out infinite;
+}
+@keyframes cta-pulse {
+  50% { transform: scale(1.18); opacity: 0.7; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cta-icon { animation: none; }
+}
+.cta-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--contrast-text);
+  letter-spacing: -0.01em;
+}
+.entry-sub {
+  font-size: 0.88rem;
+  opacity: 0.85;
+  line-height: 1.55;
+  color: var(--contrast-text-dim);
+  font-weight: 500;
+}
+.entry-sub[hidden] { display: none !important; }
+
+/* 환영 음성 이후 응답 영역 — CTA 자리를 대체. 거의 검정 + 큰 흰 글씨로 정보 영역임을 명확히. */
+.response-area {
+  margin-top: 1.6rem;
+  background: var(--contrast-bg);
+  border: 2px solid var(--contrast-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 1.2rem;
+  animation: response-in 0.3s ease-out;
+  color: var(--contrast-text);
+}
+@keyframes response-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .response-area { animation: none; }
+}
+.response-prompt {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.55;
+  color: var(--contrast-text);
+  margin-bottom: 1.2rem;
+  letter-spacing: -0.01em;
+}
+.response-prompt .listening-dot {
+  display: inline-block;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  margin-right: 0.55rem;
+  vertical-align: 1px;
+  animation: listening-pulse 1s ease-in-out infinite;
+}
+@keyframes listening-pulse {
+  50% { opacity: 0.3; transform: scale(1.3); }
+}
+.response-buttons {
+  display: flex;
+  gap: 0.6rem;
+}
+.response-btn {
+  flex: 1;
+  padding: 0.95rem 0.8rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.35rem;
+  letter-spacing: -0.01em;
+}
+.response-btn.yes {
+  background: #fff;
+  color: var(--contrast-bg);
+}
+.response-btn.yes:hover { background: rgba(255,255,255,0.92); }
+.response-btn.no {
+  background: transparent;
+  color: var(--contrast-text);
+  border: 2px solid var(--contrast-text);
+}
+.response-btn.no:hover { background: rgba(255,255,255,0.12); }
+
+/* ============================================================
+   화면 2 — 메인 (음성 우선)
+   화면 전체가 마이크 토글 영역. 음성 상태가 중심에 크게.
+   ============================================================ */
+.main-listening-area {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.main-listening-area:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -6px;
+}
+
+.mic-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 1.2rem 1.5rem;
+  gap: 1rem;
+  flex: 1;
+}
+
+/* 마이크 원형 표시 — 듣는 중일 때 펄스 */
+.mic-orb {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.2rem;
+  color: var(--ink-3);
+  transition: background 0.3s, color 0.3s, transform 0.2s;
+  position: relative;
+}
+.mic-orb .mic-icon {
+  display: block;
+  line-height: 1;
+}
+
+/* 듣는 중: 강조 파랑 + 펄스 링 */
+.mic-state.listening .mic-orb {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 0 0 rgba(43, 108, 217, 0.5);
+  animation: mic-listening-pulse 1.5s ease-out infinite;
+}
+@keyframes mic-listening-pulse {
+  0%   { box-shadow: 0 0 0 0    rgba(43, 108, 217, 0.5); }
+  70%  { box-shadow: 0 0 0 28px rgba(43, 108, 217, 0); }
+  100% { box-shadow: 0 0 0 0    rgba(43, 108, 217, 0); }
+}
+
+/* 멈춤 상태: 회색 */
+.mic-state.stopped .mic-orb {
+  background: var(--bg-soft);
+  color: var(--ink-3);
+}
+
+/* 처리 중(인식 후): 짙은 파랑, 펄스 없음 */
+.mic-state.processing .mic-orb {
+  background: var(--accent-deep);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic-state.listening .mic-orb { animation: none; }
+}
+
+.mic-status-line {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--ink-1);
+  letter-spacing: -0.02em;
+}
+.mic-help-line {
+  font-size: 1rem;
+  color: var(--ink-1);
+  font-weight: 500;
+  line-height: 1.55;
+  max-width: 300px;
+}
+
+/* 인식된 질문 표시 — 강한 대비 박스로 또렷이 */
+.recognized-q {
+  margin: 0 1rem 1rem;
+  padding: 1.1rem 1.1rem;
+  background: var(--contrast-bg);
+  color: var(--contrast-text);
+  border: 2px solid var(--contrast-border);
+  border-radius: var(--radius-md);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+.recognized-q::before {
+  content: "들은 질문";
+  font-weight: 800;
+  display: block;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffd966;
+  margin-bottom: 0.35rem;
+}
+
+/* 자주 듣는 주제 — 음성 사용이 어려운 상황을 위한 대안 */
+.quick-list { padding: 0 1rem 1rem; }
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.chip {
+  padding: 0.7rem 1rem;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  border-radius: 22px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.chip:hover { background: var(--bg-soft); border-color: var(--border-strong); }
+.chip:active { transform: scale(0.97); }
+
+/* ============================================================
+   화면 3 — 결과 목록
+   ============================================================ */
+.results-summary {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--contrast-text);
+  margin-bottom: 1.2rem;
+  padding: 1.1rem 1.1rem;
+  background: var(--contrast-bg);
+  border: 2px solid var(--contrast-border);
+  border-radius: var(--radius-md);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+.results-summary strong {
+  color: #ffd966;
+  font-weight: 800;
+}
+.results-summary strong {
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.article-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.article-card {
+  background: var(--bg-surface);
+  border: 2px solid var(--ink-2);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.1rem;
+  display: flex; flex-direction: column;
+  gap: 0.6rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+.article-card.focused {
+  background: var(--contrast-bg);
+  border-color: #ffd966;
+  border-width: 3px;
+  color: var(--contrast-text);
+}
+.article-card.focused .card-headline,
+.article-card.focused .card-action-hint,
+.article-card.focused .card-meta {
+  color: var(--contrast-text);
+}
+/* 마우스 hover·active 스타일은 제거됨 — 클릭으로 카드를 선택하지 않으니 시각 신호도 두지 않는다.
+   포커스 표시(.focused)만 의미 있는 상태 표시. */
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.layer-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 0.22rem 0.55rem;
+  border-radius: 5px;
+  border: 1.5px solid currentColor;
+}
+.layer-label.l1 { background: var(--l1-bg); color: var(--l1-ink); }
+.layer-label.l2 { background: var(--l2-bg); color: var(--l2-ink); }
+.layer-label.l3 { background: var(--l3-bg); color: var(--l3-ink); }
+
+.card-tag {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--ink-1);
+  background: var(--bg-soft);
+  padding: 0.22rem 0.55rem;
+  border-radius: 5px;
+  border: 1.5px solid var(--ink-2);
+}
+.card-fresh {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--l3-ink);
+  background: var(--l3-bg);
+  padding: 0.22rem 0.55rem;
+  border-radius: 5px;
+  border: 1.5px solid var(--l3-ink);
+}
+.card-headline {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--ink-1);
+  letter-spacing: -0.01em;
+}
+.card-action-hint, .card-meta {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.scrap-mark {
+  font-size: 1.1rem;
+  color: var(--l3-ink);
+  margin-left: auto;
+  font-weight: 700;
+}
+
+/* ============================================================
+   화면 4 — 기사 상세
+   ============================================================ */
+.detail-meta {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+.detail-headline {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 1.5rem;
+  color: var(--ink-1);
+  letter-spacing: -0.02em;
+}
+.detail-layer {
+  background: var(--bg-surface);
+  border: 2px solid var(--ink-2);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.15rem;
+  margin-bottom: 0.7rem;
+}
+.layer-marker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.layer-name {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--ink-1);
+  letter-spacing: -0.01em;
+}
+.detail-text {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--ink-1);
+  font-weight: 500;
+}
+
+.detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1.6rem;
+}
+.action-btn {
+  width: 100%;
+  padding: 1rem 1rem;
+  background: var(--bg-surface);
+  border: 2px solid var(--ink-2);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink-1);
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.5rem;
+  letter-spacing: -0.01em;
+}
+.action-btn.primary {
+  background: var(--contrast-bg);
+  color: var(--contrast-text);
+  border-color: var(--contrast-bg);
+}
+.action-btn:hover:not(.primary) { background: var(--bg-elevated); border-color: var(--ink-1); }
+.action-btn.primary:hover { background: var(--contrast-bg-soft); }
+
+/* ============================================================
+   화면 6 — 설정
+   ============================================================ */
+.settings-group { margin-bottom: 1.5rem; }
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: 0.95rem 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+}
+.setting-row.column {
+  flex-direction: column;
+  align-items: stretch;
+}
+.setting-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+.setting-name {
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+.setting-desc {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.toggle {
+  min-width: 56px;
+  padding: 0.4rem 0.7rem;
+  background: var(--bg-soft);
+  border: 1.5px solid var(--border);
+  border-radius: 22px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+.toggle.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.range-input {
+  width: 100%;
+  height: 2.2rem;
+  accent-color: var(--accent);
+}
+.range-marks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+/* ============================================================
+   디자인 노트 — 데스크톱 우측 안내
+   ============================================================ */
+.design-note {
+  display: none;
+}
+@media (min-width: 1000px) {
+  .design-note {
+    display: block;
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    width: 240px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 1.1rem 1.2rem;
+    color: rgba(255,255,255,0.85);
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+  .design-note h2 {
+    font-size: 0.92rem;
+    margin-bottom: 0.5rem;
+    color: #fff;
+  }
+  .design-note p { margin-bottom: 0.6rem; }
+  .design-note-flow {
+    font-size: 0.74rem;
+    background: rgba(0,0,0,0.25);
+    padding: 0.5rem 0.6rem;
+    border-radius: 8px;
+    line-height: 1.7;
+  }
+}
+
+/* ============================================================
+   접근성 공통
+   ============================================================ */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
